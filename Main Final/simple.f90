@@ -114,7 +114,13 @@ program simple
             write(30,*) Tinst
             call write_xyz(20, step_prod, Etotal)
         end if
-        if (mod(step_prod,1000) == 0) call accumulate_gr()   
+        if (mod(step_prod,1000) == 0) call accumulate_gr() 
+
+        ! Imprimir porcentaje de avance
+        if (mod(step_prod,int((pasosT - tMinimizacion)/100)) == 0) then 
+            print '(A,F6.2,A)', " Progreso: ", 100.0d0*step_prod/(pasosT - tMinimizacion), "%"
+        end if  
+     
      end do
 !===============================
 ! posprocesamiento
