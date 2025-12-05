@@ -1,7 +1,7 @@
 MAKEFILE = Makefile
 exe = simple
 fcomp = gfortran
-flags = -O3
+flags = -g -O3
 
 OBJS = ziggurat.o globals.o md_module.o md_integrator.o simple.o
 

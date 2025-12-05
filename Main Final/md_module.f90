@@ -24,7 +24,12 @@ contains
     muestreo           = int(Lectura_de_parametros('input/muestreo'))
     muestreoMinimizacion = int(Lectura_de_parametros('input/muestreoMinimizacion'))
     
-    
+    ! Inicialización de parámetros de interacción fluido-pared
+    a_wall(1) = 1   ! Coeficiente para la pared superior
+    a_wall(2) = 1   ! Coeficiente para la pared inferior
+    sigma_wall = 1  ! Parámetro de interacción partícula-pared
+    a_type = 1      ! Tipo de partícula (único tipo en este caso)
+
     Ttarget = Lectura_de_parametros('input/Temp')
     gama    = 0.5d0
 
@@ -218,6 +223,68 @@ end subroutine write_xyz
       end do
 
   end subroutine add_pumping
+
+  !===========================================================
+  ! Wall 9-3
+  !===========================================================
+  
+ subroutine wall93(inter_type, r0, force, a_wall, sigma_wall, z_space_wall, n_mon_tot, a_type)
+  ! Computes fluid-wall interactions:
+  ! inter_type: Tipo de interacción (1, 2, etc.)
+  ! r0: Posiciones de las partículas (3 x n_mon_tot)
+  ! force: Fuerzas en las partículas (3 x n_mon_tot)
+  ! a_wall: Coeficientes de interacción partícula-pared (2 x tipos)
+  ! sigma_wall: Parámetro de interacción partícula-pared (tipos)
+  ! z_space_wall: Altura del canal
+  ! n_mon_tot: Número total de partículas
+  ! a_type: Tipo de cada partícula (1 x n_mon_tot)
+
+  implicit none
+  integer, intent(in) :: inter_type, n_mon_tot
+  real(kind=8), intent(in) :: r0(3, n_mon_tot), z_space_wall
+  real(kind=8), intent(in) :: a_wall(2), sigma_wall
+  integer, intent(in) :: a_type
+  real(kind=8), intent(inout) :: force(3, n_mon_tot)
+
+  real(kind=8) :: inv_z, r_dummy, v_fluid_wall
+  integer :: i_part, i_type
+
+  v_fluid_wall = 0.0d0
+  
+  select case(inter_type)
+    case(2) ! (1/z)^9 - (1/z)^3 interaction
+      do i_part = 1, n_mon_tot
+
+        ! *** Bottom wall interaction
+        i_type = a_type
+        inv_z = 1.0d0 / r0(3, i_part)
+
+        ! Limitamos la cercania de la partícula a la pared 
+        if (inv_z > 20) inv_z = 20 
+
+        r_dummy = sigma_wall * inv_z
+        v_fluid_wall = v_fluid_wall + abs(a_wall(2)) * r_dummy**9 - a_wall(2) * r_dummy**3
+        force(3, i_part) = force(3, i_part) + 9.0d0 * abs(a_wall(2)) * (sigma_wall)**9 * (inv_z)**10
+        force(3, i_part) = force(3, i_part) - 3.0d0 * a_wall(2) * (sigma_wall)**3 * (inv_z)**4
+
+        ! *** Top wall interaction
+        inv_z = 1.0d0 / (z_space_wall - r0(3, i_part))
+        
+        ! Limitamos la cercania de la partícula a la pared 
+        if (inv_z > 20) inv_z = 20 
+
+        r_dummy = sigma_wall * inv_z
+        v_fluid_wall = v_fluid_wall + abs(a_wall(1)) * r_dummy**9 - a_wall(1) * r_dummy**3
+        force(3, i_part) = force(3, i_part) - 9.0d0 * abs(a_wall(1)) * (sigma_wall)**9 * (inv_z)**10
+        force(3, i_part) = force(3, i_part) + 3.0d0 * a_wall(1) * (sigma_wall)**3 * (inv_z)**4
+
+      end do
+
+    case default
+      print *, "Error: inter_type debe ser 1, 2, 3 o 4."
+      !stop
+  end select
+end subroutine wall93
 
 end module md_module
 

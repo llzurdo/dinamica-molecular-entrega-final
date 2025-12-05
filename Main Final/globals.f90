@@ -28,6 +28,11 @@ module globals
   ! constants
   real(kind=8), parameter :: kB = 1.0d0
 
+  ! Fluid-wall interaction parameters
+  real(kind=8) :: a_wall(2)  ! Coefficients for bottom (2) and top (1) walls
+  real(kind=8) :: sigma_wall ! Interaction parameter for particle-wall
+  integer :: a_type          ! Type of particle (only one type in this case)
+
 end module globals
 
 

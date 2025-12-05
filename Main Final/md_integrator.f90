@@ -76,14 +76,10 @@ subroutine apply_pbc_positions()
   do j = 1, N
     do i = 1, 3
       ! Mover partículas que están fuera por la derecha
-      do while (r(i,j) >= L)
-        r(i,j) = r(i,j) - L
-      end do
+      if (r(i,j) > L) r(i,j) = MOD(r(i,j), L)
       
       ! Mover partículas que están fuera por la izquierda  
-      do while (r(i,j) < 0.0d0)
-        r(i,j) = r(i,j) + L
-      end do
+      if (r(i,j) < 0.0d0) r(i,j) = MOD(r(i,j), L) + L
     end do
   end do
 end subroutine apply_pbc_positions
