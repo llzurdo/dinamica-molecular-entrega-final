@@ -13,6 +13,7 @@ contains
 
     !Lectura de parámetros
     N        = Lectura_de_parametros('input/N')
+    N_plus   = Lectura_de_parametros('input/N_plus')
     sigma    = Lectura_de_parametros('input/sigma')
     pump     = Lectura_de_parametros('input/pump')
     epsilon  = 1.0d0
@@ -41,9 +42,9 @@ contains
     rmax     = 0.5d0 * L
 
     ! allocate arrays
-    if (.not.allocated(r)) allocate(r(3,N))
+    if (.not.allocated(r)) allocate(r(3,N+N_plus))
     if (.not.allocated(v)) allocate(v(3,N))
-    if (.not.allocated(f)) allocate(f(3,N))
+    if (.not.allocated(f)) allocate(f(3,N+N_plus))
     
     E_pot = 0d0
     W_inst = 0d0
@@ -59,7 +60,7 @@ contains
 subroutine force(f_out, en, virial_local)
   use globals
   implicit none
-  real(kind=8), intent(out) :: f_out(3,N)
+  real(kind=8), intent(out) :: f_out(3,N+N_plus)
   real(kind=8), intent(out) :: en
   real(kind=8), intent(out) :: virial_local
   real(kind=8) :: deltar(3)
@@ -79,7 +80,7 @@ subroutine force(f_out, en, virial_local)
   V_shift = 4d0*epsilon*((sigma/rc)**12 - (sigma/rc)**6)
   
   do j = 1, N-1
-    do i = j+1, N
+    do i = j+1, N+N_plus
       deltar = r(:,i) - r(:,j)
       
       !Mìnima imagen
@@ -157,7 +158,7 @@ subroutine add_langevin_forces(f_tot, vel, Tset, gama_L, dt_local)
         f_tot(:,i) = f_tot(:,i) - gama_L * vel(:,i)
 
         ! ruido gaussiano independiente por coordenada
-        f_tot(1,i) = f_tot(1,i) + ruido_amp * rnor()
+        ! f_tot(1,i) = f_tot(1,i) + ruido_amp * rnor()
         f_tot(2,i) = f_tot(2,i) + ruido_amp * rnor()
         f_tot(3,i) = f_tot(3,i) + ruido_amp * rnor()
 
@@ -192,10 +193,10 @@ end subroutine add_langevin_forces
     integer :: j, k
     real(kind=8) :: r_out(3)
 
-    write(unit,*) N
+    write(unit,*) N+N_plus
     write(unit,*) "Step=", step, " Etot=", Etotal
 
-    do j = 1, N
+    do j = 1, N+N_plus
         !aplicar PBC a cada coordenada
         do k = 1, 3
             r_out(k) = r(k,j)

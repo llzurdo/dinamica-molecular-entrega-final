@@ -81,6 +81,7 @@ program simple
         call apply_pbc_positions()
         call force(f, E_pot, W_inst)
         call add_langevin_forces(f, v, Ttarget, gama, deltaT)
+        call add_pumping(f, pump, N)
         ! Llamada a wall93 para calcular fuerzas fluido-pared
         call wall93(2, r, f, a_wall, sigma_wall, L, N, a_type)
         call verlet_velocities(deltaT, f_old)

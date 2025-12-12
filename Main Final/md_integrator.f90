@@ -15,6 +15,26 @@ subroutine init_positions()
             r(i,j) = uni() * L
         end do
     end do
+
+    ! Inicio de posiciones de particulas en paredes
+    do j = N, N+N_plus
+        do i = 1, 3
+            if ( (N_plus/2 + N) > j) then! Partículas de abajo
+                if (i == 3) then
+                    r(i,j) = 1 * uni()
+                else
+                    r(i,j) = uni() * L
+                end if
+            else                  ! Partículas de arriba
+                if (i == 3) then
+                    r(i,j) = L - 1 * uni()
+                else
+                    r(i,j) = uni() * L
+                end if
+            end if
+        end do
+    end do
+
     print *, "Posiciones iniciales generadas. L =", L
 end subroutine init_positions
 
@@ -73,7 +93,7 @@ subroutine apply_pbc_positions()
   implicit none
   integer :: i, j
   
-  do j = 1, N
+  do j = 1, N + N_plus
     do i = 1, 3
       ! Mover partículas que están fuera por la derecha
       if (r(i,j) > L) r(i,j) = MOD(r(i,j), L)
