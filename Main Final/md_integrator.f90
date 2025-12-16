@@ -93,15 +93,17 @@ subroutine apply_pbc_positions()
   implicit none
   integer :: i, j
   
-  do j = 1, N + N_plus
-    do i = 1, 3
-      ! Mover partículas que están fuera por la derecha
-      if (r(i,j) > L) r(i,j) = MOD(r(i,j), L)
-      
-      ! Mover partículas que están fuera por la izquierda  
-      if (r(i,j) < 0.0d0) r(i,j) = MOD(r(i,j), L) + L
-    end do
+  do j = 1, N+N_plus
+        do i = 1, 3
+            ! Mover partículas que están fuera por la derecha
+            if (r(i,j) > L) r(i,j) = MOD(r(i,j), L)
+            ! Mover partículas que están fuera por la izquierda  
+            if (r(i,j) < 0.0d0) r(i,j) = MOD(r(i,j), L) + L
+
+        end do
+        if ( j > N .and. r(3,j) > 1 .and. r(3,j) < L-1) r(3,j) = 1 
   end do
+
 end subroutine apply_pbc_positions
 
   !==========================================================
@@ -122,7 +124,7 @@ end subroutine verlet_positions
 subroutine verlet_velocities(deltaT, f_old)
     implicit none
     real(kind=8), intent(in) :: deltaT
-    real(kind=8), intent(in) :: f_old(3,N)
+    real(kind=8), intent(in) :: f_old(3,N+N_plus)
     integer :: j
     do j = 1, N
         v(:,j) = v(:,j) + 0.5d0*(f_old(:,j) + f(:,j))*deltaT
@@ -196,7 +198,7 @@ subroutine accumulate_gr()
         do i = j+1, N
             deltar = r(:,i) - r(:,j)
             ! mínima imagen
-            do k = 1,3
+            do k = 1,2
                 if (deltar(k) >  L/2d0) deltar(k) = deltar(k) - L
                 if (deltar(k) < -L/2d0) deltar(k) = deltar(k) + L
             end do
@@ -214,9 +216,9 @@ subroutine accumulate_gr()
 end subroutine accumulate_gr
 
 
-  !==========================================================
-  !salida .dat del g(r)
-  !==========================================================
+!==========================================================
+!salida .dat del g(r)
+!==========================================================
 subroutine normalize_and_write_gr(filename)
     implicit none
     character(len=*), intent(in) :: filename
@@ -252,6 +254,72 @@ subroutine normalize_and_write_gr(filename)
     close(90)
 end subroutine normalize_and_write_gr
 
+!==========================================================
+! Calcular perfil de velocidad (Versión Estática 100% limpia)
+!==========================================================
+subroutine velocity_prof_simple(mode)
+    use globals
+    implicit none
+    integer, intent(in) :: mode
+    
+    integer :: j, capa
+    real(kind=8) :: dz, z_actual, promedio_vx
+
+    ! Nota: Usamos 'n_capas' que ya viene definido como parameter en globals.f90
+
+    select case (mode)
+    
+    ! --- MODO 0: INICIALIZACIÓN ---
+    case(0)
+        ! ERROR CORREGIDO: Ya no usamos allocate/deallocate.
+        ! Simplemente limpiamos los valores poniendo ceros.
+        v_sum_x = 0.0d0
+        n_count_z = 0.0d0
+        
+        print *, " * Perfil de velocidad inicializado (", n_capas, " capas)."
+
+    ! --- MODO 1: ACUMULACIÓN ---
+    case(1)
+        dz = L / real(n_capas, 8)
+
+        do j = 1, N
+            z_actual = r(3,j) 
+            capa = int(z_actual / dz) + 1
+
+            ! Blindaje de bordes
+            if (capa < 1) capa = 1
+            if (capa > n_capas) capa = n_capas
+            
+            v_sum_x(capa) = v_sum_x(capa) + v(1,j)
+            n_count_z(capa) = n_count_z(capa) + 1.0d0
+        end do
+
+    ! --- MODO 2: ESCRITURA ---
+    case(2)
+        print *, "--> Guardando perfil..." 
+        
+        dz = L / real(n_capas, 8)
+        
+        open(unit=74, file='output/perfil_velocidad.dat', status='unknown')
+        write(74,*) '# Z_centro    Vx_promedio'
+
+        do j = 1, n_capas
+            if (n_count_z(j) > 0.0d0) then
+                promedio_vx = v_sum_x(j) / n_count_z(j)
+            else
+                promedio_vx = 0.0d0
+            end if
+            write(74, *) (dble(j)-0.5d0)*dz, promedio_vx
+        end do
+        
+        close(74)
+        print *, "--> Archivo guardado." 
+        
+        ! ERROR CORREGIDO: No hacemos deallocate aquí tampoco.
+
+    end select
+
+end subroutine velocity_prof_simple
 
 end module md_integrator
 

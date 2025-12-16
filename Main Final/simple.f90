@@ -15,7 +15,7 @@ program simple
   ! inicializacion
 !=========================================================
   call init()
-  allocate(f_old(3,N))
+  allocate(f_old(3,N+N_plus))
   Pmed =  0
   Pmed2 = 0
   conteoVirial = 0
@@ -100,6 +100,9 @@ program simple
 !=========================================================
 ! Producción (y muestreo)
 !=========================================================
+    ! Inicializar el perfilador antes de arrancar
+    call velocity_prof_simple(0)
+    
     do step_prod = 1, pasosT - tMinimizacion
         f_old(:,:) = f(:,:)
         call verlet_positions(deltaT)
@@ -120,6 +123,9 @@ program simple
             write(40, *) P
             write(30,*) Tinst
             call write_xyz(20, step_prod, Etotal)
+            
+            ! Acumular datos para el perfil de velocidad
+            call velocity_prof_simple(1)
         end if
         if (mod(step_prod,1000) == 0) call accumulate_gr() 
 
@@ -139,16 +145,14 @@ program simple
     var_presion = sqrt(Pmed2 - (Pmed*Pmed))
     write(10, *) Pmed2, Pmed
     write(60,*) var_presion
-    
-    close(20)
-    close(40)
-    close(50)
-    close(30)
-    close(10)
-    close(60)
+
     !Normalizar y escribir g(r)
     call normalize_and_write_gr("gr.dat")
     print *, "g(r) escrito en gr.dat"
+
+    print *, "--- INTENTANDO GUARDAR PERFIL ---"  ! <--- Agrega esto
+    call velocity_prof_simple(2)
+    print *, "--- PERFIL GUARDADO ---"            ! <--- Agrega esto
 
 !===============================
 ! Guardar nueva semilla
@@ -158,6 +162,12 @@ program simple
     write(10,*) seed
     close(10)
 
+    close(20)
+    close(40)
+    close(50)
+    close(30)
+    close(10)
+    close(60)
     print *, "MD (Guia 5) finalizado."
 
 end program simple

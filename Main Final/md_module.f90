@@ -43,7 +43,7 @@ contains
 
     ! allocate arrays
     if (.not.allocated(r)) allocate(r(3,N+N_plus))
-    if (.not.allocated(v)) allocate(v(3,N))
+    if (.not.allocated(v)) allocate(v(3,N+N_plus))
     if (.not.allocated(f)) allocate(f(3,N+N_plus))
     
     E_pot = 0d0
@@ -215,7 +215,7 @@ end subroutine write_xyz
       implicit none
 
       integer, intent(in)         :: n_particles
-      real(kind=8), intent(inout) :: f_in(3,n_particles)   ! fuerzas ya calculadas
+      real(kind=8), intent(inout) :: f_in(3,N+N_plus)   ! fuerzas ya calculadas
       real(kind=8), intent(in)    :: pump_force            ! fuerza de bombeo
       integer :: i
 

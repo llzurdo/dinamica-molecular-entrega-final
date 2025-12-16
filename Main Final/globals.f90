@@ -33,6 +33,13 @@ module globals
   real(kind=8) :: sigma_wall ! Interaction parameter for particle-wall
   integer :: a_type          ! Type of particle (only one type in this case)
 
+  ! --- Variables para el Perfil de Velocidad ---
+  integer, parameter :: n_capas = 50 ! Cantidad de capas (bins) en Z
+  real(kind=8) :: v_sum_x(n_capas)   ! Suma de velocidades Vx en cada capa
+  real(kind=8) :: n_count_z(n_capas) ! Contador de partículas en cada capa
+  ! --------------------------------------------------
+
+
 end module globals
 
 
