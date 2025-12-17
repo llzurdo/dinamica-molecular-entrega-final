@@ -46,7 +46,7 @@ program simple
     open(unit=20,file="output/posicionT.xyz",status="unknown")
     open(unit=40,file="output/presion.dat",status="unknown")
     open(unit=30,file="output/temperatura.dat",status="unknown")
-    open(unit=10,file="output/fluctP.dat",status="unknown")
+    open(unit=15,file="output/fluctP.dat",status="unknown")
     open(unit=60,file="output/varP.dat",status="unknown")
     
     !preparar muestreo g(r)
@@ -143,7 +143,7 @@ program simple
     Pmed2  = Pmed2 / (REAL(pasosT - tMinimizacion)/REAL(MUESTREO))
     conteoVirial = conteoVirial / (REAL(pasosT - tMinimizacion)/REAL(MUESTREO))
     var_presion = sqrt(Pmed2 - (Pmed*Pmed))
-    write(10, *) Pmed2, Pmed
+    write(15, *) Pmed2, Pmed
     write(60,*) var_presion
 
     !Normalizar y escribir g(r)
@@ -166,7 +166,7 @@ program simple
     close(40)
     close(50)
     close(30)
-    close(10)
+    close(15)
     close(60)
     print *, "MD (Guia 5) finalizado."
 
