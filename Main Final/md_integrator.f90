@@ -316,8 +316,8 @@ subroutine velocity_prof_simple(mode)
                 densidad    = 0.0d0                         !!!! AGREGADO
             end if
 
-            write(74, *) (dble(j)-0.5d0)*dz, promedio_vx
-            write(75, *) (dble(j)-0.5d0)*dz, densidad        !!!! AGREGADO
+            write(74, *) (dble(j)-0.5d0)*dz, promedio_vx, n_count_z(j)
+            write(75, *) (dble(j)-0.5d0)*dz, densidad, n_count_z(j)       !!!! AGREGADO
         end do
         
         close(74)
