@@ -264,6 +264,8 @@ subroutine velocity_prof_simple(mode)
     
     integer :: j, capa
     real(kind=8) :: dz, z_actual, promedio_vx
+    real(kind=8) :: densidad            !!!! AGREGADO
+  
 
     ! Nota: Usamos 'n_capas' que ya viene definido como parameter en globals.f90
 
@@ -271,9 +273,7 @@ subroutine velocity_prof_simple(mode)
     
     ! --- MODO 0: INICIALIZACIÓN ---
     case(0)
-        ! ERROR CORREGIDO: Ya no usamos allocate/deallocate.
-        ! Simplemente limpiamos los valores poniendo ceros.
-        v_sum_x = 0.0d0
+        v_sum_x   = 0.0d0
         n_count_z = 0.0d0
         
         print *, " * Perfil de velocidad inicializado (", n_capas, " capas)."
@@ -290,7 +290,7 @@ subroutine velocity_prof_simple(mode)
             if (capa < 1) capa = 1
             if (capa > n_capas) capa = n_capas
             
-            v_sum_x(capa) = v_sum_x(capa) + v(1,j)
+            v_sum_x(capa)   = v_sum_x(capa) + v(1,j)
             n_count_z(capa) = n_count_z(capa) + 1.0d0
         end do
 
@@ -298,25 +298,32 @@ subroutine velocity_prof_simple(mode)
     case(2)
         print *, "--> Guardando perfil..." 
         
-        dz = L / real(n_capas, 8)
+        dz   = L / real(n_capas, 8)
+                         
         
         open(unit=74, file='output/perfil_velocidad.dat', status='unknown')
+        open(unit=75, file='output/perfil_densidad.dat',  status='unknown')  !!!! AGREGADO
+
         write(74,*) '# Z_centro    Vx_promedio'
+        write(75,*) '# Z_centro    densidad'   !!!! AGREGADO
 
         do j = 1, n_capas
             if (n_count_z(j) > 0.0d0) then
                 promedio_vx = v_sum_x(j) / n_count_z(j)
+                densidad    = n_count_z(j) / ( L * L   * dz)   !!!! AGREGADO
             else
                 promedio_vx = 0.0d0
+                densidad    = 0.0d0                         !!!! AGREGADO
             end if
+
             write(74, *) (dble(j)-0.5d0)*dz, promedio_vx
+            write(75, *) (dble(j)-0.5d0)*dz, densidad        !!!! AGREGADO
         end do
         
         close(74)
-        print *, "--> Archivo guardado." 
+        close(75)                         !!!! AGREGADO
+        print *, "--> Archivos guardados." 
         
-        ! ERROR CORREGIDO: No hacemos deallocate aquí tampoco.
-
     end select
 
 end subroutine velocity_prof_simple
